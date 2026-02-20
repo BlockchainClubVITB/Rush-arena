@@ -1,16 +1,41 @@
-# React + Vite
+# Rush Arena - QR Tracking System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A professional, university-grade event management system designed for **Linpack Club**. This application handles participant check-ins and event win tracking via QR codes and Student IDs.
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Direct Volunteer Scanner**: Instant access to QR scanning upon launch.
+- **Dual Identification**: Check participants via QR Scan or Student Registration Number.
+- **12 Game Tracking Dashboard**:
+  - **9 Mini Games**: Dedicated checkboxes for fast-paced event logging.
+  - **3 Main Events**: Featured tracking for Bull Riding, Body Zorbing, and Speed Dating.
+- **Supabase Integration**: Ready-to-use service layer for cloud synchronization.
+- **University Branding**: Professional dark-mode aesthetic built with Framer Motion and Lucide icons.
+- **Mobile Optimized**: Enhanced touch targets and responsive layouts for on-field volunteers.
 
-## React Compiler
+## 🛠️ Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Frontend**: React + Vite
+- **Styling**: Vanilla CSS (Custom Glassmorphism Design)
+- **Icons**: Lucide React
+- **Animations**: Framer Motion
+- **QR Support**: html5-qrcode
 
-## Expanding the ESLint configuration
+## 📦 Getting Started
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. **Install Dependencies**:
+   ```bash
+   npm install
+   ```
+
+2. **Run Locally**:
+   ```bash
+   npm run dev
+   ```
+
+3. **Supabase Setup**:
+   - Create a `participants` table in your Supabase project.
+   - Configure your keys in `src/lib/participantService.js`.
+
+---
+Developed for **Linpack Club** 2026.
