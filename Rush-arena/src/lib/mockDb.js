@@ -1,20 +1,32 @@
-const STORAGE_KEY = 'rush_arena_data';
+const STORAGE_KEY = 'rush_arena_data_v2'; // New key for the updated schema
 
 const initialData = {
   participants: [
-    // Seeding some initial data for testing/demo
     {
-      hash_id: 'RA-DEMO1',
-      name: 'Test Student',
-      reg_no: '2024CS001',
+      hash_id: 'RA-A1B2C3',
+      name: 'Aditya Verma',
+      reg_no: '2024RA001',
       mobile: '9876543210',
-      email: 'student@university.edu',
-      events: {
-        event_1_win: false, event_2_win: false, event_3_win: false,
-        event_4_win: false, event_5_win: false, event_6_win: false,
-        event_7_win: false, event_8_win: false, event_9_win: false,
-        event_10_win: false, event_11_win: false, event_12_win: false,
-      }
+      email: 'aditya@university.edu',
+      event_1_win: false, event_2_win: false, event_3_win: false,
+      event_4_win: false, event_5_win: false, event_6_win: false,
+      event_7_win: false, event_8_win: false, event_9_win: false,
+      bull_riding_win: false,
+      body_zorbing_win: false,
+      speed_dating_win: false
+    },
+    {
+      hash_id: 'RA-X9Y8Z7',
+      name: 'Isha Sharma',
+      reg_no: '2024RA042',
+      mobile: '9123456789',
+      email: 'isha@university.edu',
+      event_1_win: true, event_2_win: false, event_3_win: true,
+      event_4_win: false, event_5_win: false, event_6_win: false,
+      event_7_win: false, event_8_win: false, event_9_win: false,
+      bull_riding_win: true,
+      body_zorbing_win: false,
+      speed_dating_win: false
     }
   ]
 };
@@ -35,20 +47,20 @@ export const mockDb = {
 
   getParticipantByIdentifier: (identifier) => {
     const participants = mockDb.getParticipants();
-    const upperId = identifier.toUpperCase();
+    const cleanId = identifier.trim().toUpperCase();
     return participants.find(p =>
-      p.hash_id.toUpperCase() === upperId ||
-      p.reg_no.toUpperCase() === upperId
+      p.hash_id.toUpperCase() === cleanId ||
+      p.reg_no.toUpperCase() === cleanId
     );
   },
 
-  updateParticipantEvents: (hash_id, eventStatuses) => {
+  updateParticipantEvents: (hash_id, winStatuses) => {
     const data = mockDb.getData();
     const index = data.participants.findIndex(p => p.hash_id === hash_id);
     if (index !== -1) {
-      data.participants[index].events = {
-        ...data.participants[index].events,
-        ...eventStatuses
+      data.participants[index] = {
+        ...data.participants[index],
+        ...winStatuses
       };
       mockDb.saveData(data);
       return data.participants[index];

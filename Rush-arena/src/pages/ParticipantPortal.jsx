@@ -1,358 +1,301 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { User, Mail, Phone, Hash, Save, CheckCircle, Trophy, Clock, ChevronLeft, ShieldCheck, Zap } from 'lucide-react';
+import {
+  User, Hash, Phone, Mail,
+  Check, Save, Clock, Trophy,
+  ChevronLeft, LayoutGrid, Star,
+  ShieldCheck, Loader2
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { mockDb } from '../lib/mockDb';
+import { participantService } from '../lib/participantService';
 
 const ParticipantPortal = () => {
   const { hash_id } = useParams();
   const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(true);
   const [participant, setParticipant] = useState(null);
-  const [events, setEvents] = useState({});
+  const [wins, setWins] = useState({});
   const [isSaving, setIsSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState(null); // 'idle' | 'saving' | 'success'
+  const [saveStatus, setSaveStatus] = useState(null); // 'idle' | 'success'
 
   useEffect(() => {
-    const data = mockDb.getParticipantByIdentifier(hash_id);
-    if (data) {
-      setParticipant(data);
-      setEvents(data.events);
-    } else {
-      navigate('/');
+    async function fetchData() {
+      const data = await participantService.getParticipant(hash_id);
+      if (data) {
+        setParticipant(data);
+        // Initialize win states from participant fields
+        setWins({
+          event_1_win: data.event_1_win,
+          event_2_win: data.event_2_win,
+          event_3_win: data.event_3_win,
+          event_4_win: data.event_4_win,
+          event_5_win: data.event_5_win,
+          event_6_win: data.event_6_win,
+          event_7_win: data.event_7_win,
+          event_8_win: data.event_8_win,
+          event_9_win: data.event_9_win,
+          bull_riding_win: data.bull_riding_win,
+          body_zorbing_win: data.body_zorbing_win,
+          speed_dating_win: data.speed_dating_win,
+        });
+      } else {
+        navigate('/');
+      }
+      setLoading(false);
     }
+    fetchData();
   }, [hash_id, navigate]);
 
-  const toggleEvent = (eventId) => {
-    setEvents(prev => ({ ...prev, [eventId]: !prev[eventId] }));
-    setSaveStatus('idle');
+  const toggleWin = (field) => {
+    setWins(prev => ({ ...prev, [field]: !prev[field] }));
+    setSaveStatus(null);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsSaving(true);
-    setSaveStatus('saving');
-
-    // Simulate Supabase update
-    setTimeout(() => {
-      mockDb.updateParticipantEvents(participant.hash_id, events);
-      setIsSaving(false);
+    try {
+      await participantService.updateWins(participant.hash_id, wins);
       setSaveStatus('success');
       setTimeout(() => setSaveStatus(null), 3000);
-    }, 1000);
+    } catch (err) {
+      console.error("Save failed", err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  if (!participant) return null;
+  if (loading) return (
+    <div className="center-loader">
+      <Loader2 className="animate-spin" size={40} color="var(--primary)" />
+    </div>
+  );
 
   const miniEvents = [
-    { id: 'event_1_win', name: 'Aim & Fire' },
-    { id: 'event_2_win', name: 'Laser Maze' },
-    { id: 'event_3_win', name: 'Memory Match' },
-    { id: 'event_4_win', name: 'Silent Disco' },
-    { id: 'event_5_win', name: 'VR Challenge' },
-    { id: 'event_6_win', name: 'Escape Room' },
-    { id: 'event_7_win', name: 'Robot War' },
-    { id: 'event_8_win', name: 'Trivia Rush' },
-    { id: 'event_9_win', name: 'Retro Gaming' },
+    { field: 'event_1_win', label: 'Aim & Fire' },
+    { field: 'event_2_win', label: 'Laser Maze' },
+    { field: 'event_3_win', label: 'Memory Match' },
+    { field: 'event_4_win', label: 'Silent Disco' },
+    { field: 'event_5_win', label: 'VR Challenge' },
+    { field: 'event_6_win', label: 'Escape Room' },
+    { field: 'event_7_win', label: 'Robot War' },
+    { field: 'event_8_win', label: 'Trivia Rush' },
+    { field: 'event_9_win', label: 'Retro Gaming' },
   ];
 
   const mainEvents = [
-    { id: 'event_10_win', name: 'Bull Riding', desc: 'Mechanical balance challenge' },
-    { id: 'event_11_win', name: 'Body Zorbing', desc: 'Full-contact inflatable arena' },
-    { id: 'event_12_win', name: 'Speed Dating', desc: 'Social networking event' },
+    { field: 'bull_riding_win', label: 'Bull Riding' },
+    { field: 'body_zorbing_win', label: 'Body Zorbing' },
+    { field: 'speed_dating_win', label: 'Speed Dating' },
   ];
 
-  const stats = {
-    total: Object.values(events).filter(Boolean).length,
-    main: [events.event_10_win, events.event_11_win, events.event_12_win].filter(Boolean).length
-  };
-
   return (
-    <div className="portal-page">
-      <nav className="portal-nav">
-        <button className="back-btn" onClick={() => navigate('/')}>
-          <ChevronLeft size={18} />
+    <div className="portal">
+      <header className="portal-header">
+        <button className="back-link" onClick={() => navigate('/')}>
+          <ChevronLeft size={20} />
           Volunteer Scanner
         </button>
-        <div className="portal-id">
+        <div className="verified-badge">
           <ShieldCheck size={16} />
-          <span>Verified ID: {participant.hash_id}</span>
+          <span>Verified Student Path</span>
         </div>
-      </nav>
+      </header>
 
-      <div className="grid-layout">
-        <aside className="profile-column">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-panel profile-card">
-            <div className="user-icon-lg">{participant.name[0]}</div>
-            <h3>{participant.name}</h3>
-            <p className="reg-no">{participant.reg_no}</p>
-
-            <div className="contact-info">
-              <div className="info-item"><Phone size={14} /> {participant.mobile}</div>
-              <div className="info-item"><Mail size={14} /> {participant.email}</div>
-            </div>
-
-            <div className="score-summary">
-              <div className="score-box">
-                <span className="sc-val">{stats.total}</span>
-                <span className="sc-lbl">Total Events</span>
-              </div>
-              <div className="score-box highlight">
-                <span className="sc-val">{stats.main}</span>
-                <span className="sc-lbl">Main Wins</span>
-              </div>
-            </div>
-          </motion.div>
-        </aside>
-
-        <main className="events-column">
-          <section className="event-section">
-            <div className="section-header">
-              <Zap size={18} />
-              <h4>Mini Events (9)</h4>
-            </div>
-            <div className="mini-events-list">
-              {miniEvents.map(event => (
-                <div
-                  key={event.id}
-                  className={`mini-row ${events[event.id] ? 'active' : ''}`}
-                  onClick={() => toggleEvent(event.id)}
-                >
-                  <div className="check-box">
-                    {events[event.id] && <CheckCircle size={14} />}
-                  </div>
-                  <span>{event.name}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="event-section">
-            <div className="section-header">
-              <Trophy size={18} />
-              <h4>Main Events (3)</h4>
-            </div>
-            <div className="main-events-stack">
-              {mainEvents.map(event => (
-                <div
-                  key={event.id}
-                  className={`main-card ${events[event.id] ? 'active' : ''}`}
-                  onClick={() => toggleEvent(event.id)}
-                >
-                  <div className="mc-left">
-                    <div className="mc-badge">FEATURED</div>
-                    <h5>{event.name}</h5>
-                    <p>{event.desc}</p>
-                  </div>
-                  <div className="mc-check">
-                    {events[event.id] ? <CheckCircle size={24} color="#10b981" /> : <Clock size={24} color="#64748b" />}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <div className="floating-save">
-            <button
-              className={`btn btn-primary save-action ${saveStatus === 'success' ? 'success' : ''}`}
-              onClick={handleSave}
-              disabled={isSaving}
-            >
-              {isSaving ? 'Updating Database...' : saveStatus === 'success' ? 'Records Synchronized' : 'Save Participation'}
-              {saveStatus === 'success' && <CheckCircle size={18} />}
-            </button>
+      <section className="profile-summary glass-card">
+        <div className="profile-icon">{participant.name[0]}</div>
+        <div className="profile-info">
+          <h2>{participant.name}</h2>
+          <div className="info-grid">
+            <span className="info-tag"><Hash size={12} /> {participant.reg_no}</span>
+            <span className="info-tag"><Mail size={12} /> {participant.email}</span>
           </div>
-        </main>
+        </div>
+      </section>
+
+      <div className="events-container">
+        <div className="section-title">
+          <LayoutGrid size={18} />
+          <h3>Mini Games (9 Total)</h3>
+        </div>
+        <div className="game-grid">
+          {miniEvents.map(game => (
+            <div
+              key={game.field}
+              className={`checkbox-container ${wins[game.field] ? 'checked' : ''}`}
+              onClick={() => toggleWin(game.field)}
+            >
+              <div className="custom-checkbox">
+                {wins[game.field] && <Check size={16} />}
+              </div>
+              <span className="game-label">{game.label}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="section-title main-section">
+          <Star size={18} />
+          <h3>Main Events</h3>
+        </div>
+        <div className="main-games-stack">
+          {mainEvents.map(game => (
+            <div
+              key={game.field}
+              className={`main-game-row ${wins[game.field] ? 'checked' : ''}`}
+              onClick={() => toggleWin(game.field)}
+            >
+              <div className="main-game-info">
+                <span className="main-label">{game.label}</span>
+                <span className="victory-badge">{wins[game.field] ? 'WINNER' : 'NOT PLAYED'}</span>
+              </div>
+              <div className="custom-checkbox large">
+                {wins[game.field] ? <Check size={20} /> : <Clock size={20} />}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="submit-area">
+        <button
+          className={`btn btn-primary submit-btn ${saveStatus === 'success' ? 'btn-success' : ''}`}
+          onClick={handleSave}
+          disabled={isSaving}
+        >
+          {isSaving ? (
+            <><Loader2 className="animate-spin" size={18} /> Updating Supabase...</>
+          ) : saveStatus === 'success' ? (
+            <><Check size={18} /> Record Synchronized</>
+          ) : (
+            <><Save size={18} /> Submit Results</>
+          )}
+        </button>
       </div>
 
       <style jsx>{`
-        .portal-page {
-          max-width: 1000px;
-          margin: 0 auto;
-        }
-
-        .portal-nav {
+        .portal { max-width: 600px; margin: 0 auto; padding-bottom: env(safe-area-inset-bottom, 40px); }
+        
+        .portal-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 32px;
-        }
-
-        .back-btn {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          color: var(--text-sub);
-          font-size: 14px;
-        }
-
-        .portal-id {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 6px 14px;
-          background: rgba(99, 102, 241, 0.1);
-          border: 1px solid var(--border-focus);
-          border-radius: 20px;
-          color: var(--brand-primary);
-          font-family: monospace;
-          font-size: 13px;
-          font-weight: 600;
-        }
-
-        .grid-layout {
-          display: grid;
-          grid-template-columns: 320px 1fr;
-          gap: 40px;
-        }
-
-        .profile-card {
-          padding: 32px;
-          border-radius: var(--radius-lg);
-          text-align: center;
-          position: sticky;
-          top: 32px;
-        }
-
-        .user-icon-lg {
-          width: 72px;
-          height: 72px;
-          background: linear-gradient(135deg, var(--brand-primary), #818cf8);
-          border-radius: 50%;
-          margin: 0 auto 20px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 32px;
-          font-weight: 800;
-          color: white;
-          box-shadow: 0 8px 16px rgba(99, 102, 241, 0.2);
-        }
-
-        .profile-card h3 { font-size: 22px; margin-bottom: 4px; }
-        .reg-no { color: var(--text-sub); font-size: 14px; margin-bottom: 24px; }
-
-        .contact-info {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          padding: 20px 0;
-          border-top: 1px solid var(--border-light);
           margin-bottom: 24px;
         }
 
-        .info-item {
+        .back-link {
           display: flex;
           align-items: center;
-          gap: 12px;
-          font-size: 13px;
-          color: var(--text-muted);
-        }
-
-        .score-summary {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-        }
-
-        .score-box {
-          padding: 16px;
-          background: rgba(255,255,255,0.03);
-          border-radius: var(--radius-md);
-          display: flex;
-          flex-direction: column;
-        }
-
-        .score-box.highlight { background: rgba(16, 185, 129, 0.05); }
-        .sc-val { font-size: 24px; font-weight: 700; color: white; }
-        .sc-lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.1em; }
-
-        .section-header {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: 20px;
-          color: var(--text-sub);
-        }
-
-        .section-header h4 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; }
-
-        .event-section { margin-bottom: 40px; }
-
-        .mini-events-list {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-        }
-
-        .mini-row {
-          padding: 14px 18px;
-          background: rgba(255,255,255,0.02);
-          border: 1px solid var(--border-light);
-          border-radius: var(--radius-md);
-          display: flex;
-          align-items: center;
-          gap: 12px;
+          gap: 6px;
+          color: var(--text-dim);
+          background: none;
+          border: none;
+          font-size: 14px;
           cursor: pointer;
-          transition: all 0.2s ease;
         }
 
-        .mini-row:hover { background: rgba(255,255,255,0.05); }
-        .mini-row.active { border-color: var(--brand-secondary); background: rgba(16, 185, 129, 0.05); }
+        .verified-badge {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 11px;
+          font-weight: 700;
+          color: var(--primary);
+          background: var(--primary-glow);
+          padding: 6px 12px;
+          border-radius: 100px;
+          text-transform: uppercase;
+        }
 
-        .check-box {
-          width: 20px;
-          height: 20px;
-          border: 2px solid var(--border-light);
-          border-radius: 5px;
+        .profile-summary {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          padding: 24px;
+          margin-bottom: 32px;
+        }
+
+        .profile-icon {
+          width: 64px;
+          height: 64px;
+          background: linear-gradient(135deg, var(--primary), #60a5fa);
+          border-radius: 16px;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: var(--brand-secondary);
+          font-size: 28px;
+          font-weight: 800;
+          color: white;
+          box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
         }
 
-        .active .check-box { border-color: var(--brand-secondary); }
+        .profile-info h2 { font-size: 24px; line-height: 1.2; margin-bottom: 4px; }
+        .info-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+        .info-tag { font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 6px; }
 
-        .main-events-stack { display: flex; flex-direction: column; gap: 16px; }
+        .section-title {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 16px;
+          color: var(--text-dim);
+        }
 
-        .main-card {
-          padding: 24px;
-          background: rgba(255,255,255,0.02);
-          border: 1px solid var(--border-light);
-          border-radius: var(--radius-lg);
+        .section-title h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; }
+        .main-section { margin-top: 32px; }
+
+        .game-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+        }
+
+        .game-label { font-size: 14px; font-weight: 500; }
+
+        .main-games-stack { display: flex; flex-direction: column; gap: 12px; }
+
+        .main-game-row {
           display: flex;
           justify-content: space-between;
           align-items: center;
+          padding: 20px;
+          background: var(--card-alt);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: var(--transition);
         }
 
-        .main-card:hover { transform: translateX(4px); background: rgba(255,255,255,0.04); }
-        .main-card.active { border-color: var(--brand-primary); background: rgba(99, 102, 241, 0.05); }
+        .main-game-row.checked { border-color: var(--primary); background: var(--primary-glow); }
 
-        .mc-badge {
-          font-size: 9px;
-          font-weight: 800;
-          color: var(--brand-primary);
-          letter-spacing: 0.1em;
-          margin-bottom: 6px;
-        }
+        .main-game-info { display: flex; flex-direction: column; }
+        .main-label { font-size: 18px; font-weight: 700; }
+        .victory-badge { font-size: 10px; font-weight: 800; color: var(--text-muted); }
+        .checked .victory-badge { color: var(--primary); }
 
-        .main-card h5 { font-size: 18px; margin-bottom: 4px; }
-        .main-card p { font-size: 13px; color: var(--text-muted); }
+        .custom-checkbox.large { width: 32px; height: 32px; border-radius: 8px; border-width: 2px; }
+        .checked .custom-checkbox { background: var(--primary); border-color: var(--primary); }
 
-        .floating-save {
+        .submit-area {
           position: sticky;
           bottom: 24px;
-          padding-top: 24px;
-          background: linear-gradient(transparent, var(--bg-base) 20%);
+          margin-top: 40px;
+          padding: 16px;
+          background: rgba(15, 23, 42, 0.8);
+          backdrop-filter: blur(12px);
+          border-radius: var(--radius-lg);
+          border: 1px solid var(--border);
         }
 
-        .save-action { width: 100%; height: 56px; font-size: 16px; }
-        .save-action.success { background: var(--brand-secondary); }
+        .submit-btn { width: 100%; height: 56px; font-size: 16px; gap: 12px; }
+        .btn-success { background: var(--success) !important; }
 
-        @media (max-width: 1024px) {
-          .grid-layout { grid-template-columns: 1fr; }
-          .profile-card { position: static; }
-          .mini-events-list { grid-template-columns: 1fr; }
+        .center-loader { height: 80vh; display: flex; items-center; justify-content: center; }
+
+        .animate-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        @media (max-width: 480px) {
+          .game-grid { grid-template-columns: 1fr; }
         }
       `}</style>
     </div>
