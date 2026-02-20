@@ -109,6 +109,7 @@ const ParticipantPortal = () => {
           <div className="info-grid">
             <span className="info-tag"><Hash size={12} /> {participant.reg_no}</span>
             <span className="info-tag"><Mail size={12} /> {participant.email}</span>
+            <span className="info-tag"><Phone size={12} /> {participant.mobile}</span>
           </div>
         </div>
       </section>
